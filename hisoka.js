@@ -34,6 +34,7 @@ let tebaklirik = db.data.game.lirik = []
 let tebaktebakan = db.data.game.tebakan = []
 let vote = db.data.others.vote = []
 
+
 module.exports = hisoka = async (hisoka, m, chatUpdate, store) => {
     try {
         var body = (m.mtype === 'conversation') ? m.message.conversation : (m.mtype == 'imageMessage') ? m.message.imageMessage.caption : (m.mtype == 'videoMessage') ? m.message.videoMessage.caption : (m.mtype == 'extendedTextMessage') ? m.message.extendedTextMessage.text : (m.mtype == 'buttonsResponseMessage') ? m.message.buttonsResponseMessage.selectedButtonId : (m.mtype == 'listResponseMessage') ? m.message.listResponseMessage.singleSelectReply.selectedRowId : (m.mtype == 'templateButtonReplyMessage') ? m.message.templateButtonReplyMessage.selectedId : (m.mtype === 'messageContextInfo') ? (m.message.buttonsResponseMessage?.selectedButtonId || m.message.listResponseMessage?.singleSelectReply.selectedRowId || m.text) : ''
@@ -438,8 +439,25 @@ Selama ${clockString(new Date - user.afkTime)}
             user.afkTime = -1
             user.afkReason = ''
         }
-	    
-        switch(command) {
+        commando = ""
+	    switch (command) {
+            case "join":
+            case "kick":
+            case "demote":
+            case "promote":
+            case "add":
+                if(global.db.data.Barqah.limit >= global.db.data.Barqah.maxlimit){
+                    m.reply("limit yang di tetapkan untuk fitur tersebut telah habis tunggu berapa detik")
+                }else{
+                commando = command
+                }
+                break;
+        
+            default:
+                commando = command
+                break;
+        }
+        switch(commando) {
 	    case 'afk': {
                 let user = global.db.data.users[m.sender]
                 user.afkTime = + new Date
@@ -1135,6 +1153,42 @@ break
                 hisoka.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: true, id: m.quoted.id, participant: m.quoted.sender } })
             }
             break
+            case 'bcgchide': case 'bcgroup': {
+                if (!isCreator) throw mess.owner
+                if (!text) throw `Text mana?\n\nExample : ${prefix + command} fatih-san`
+                let getGroups = await hisoka.groupFetchAllParticipating()
+                let groups = Object.entries(getGroups).slice(0).map(entry => entry[1])
+                let anu = groups.map(v => v.id)
+                m.reply(`Mengirim Broadcast Ke ${anu.length} Group Chat, Waktu Selesai ${anu.length * 1.5} detik`)
+                for (let i of anu) {
+                    await sleep(1500)
+                      let txt = `「 Broadcast Bot 」\n\n${text}`
+                      const metadata = hisoka.groupMetadata(i)
+                      const orang = metadata.participants
+                      const templateButtons = [
+                        {index: 1, urlButton: {displayText: '👤 Pembroadcast', url: 'http://wa.me/'+m.sender.split("@")[0]}},
+                        {index: 1, urlButton: {displayText: '⭐ KadekBotz Website', url: 'https://kadekbotz.xiex.my.id'}},
+                        {index: 3, quickReplyButton: {displayText: '👤 Owner', id: '#owner'}},
+                    ]
+                    try {
+                        ppuser = await hisoka.profilePictureUrl(m.sender, 'image')
+                    } catch {
+                        ppuser = 'http://xiex.my.id/media/1655615301665undefined.jpg'
+                    }
+                    var buttonMessage = {
+                        caption: txt,
+                        contextInfo : { mentionedJid: orang },
+                        footer: 'this bot running on xiex',
+                        templateButtons: templateButtons,
+                        image: {url:`http://xiex.my.id:3000/api/makecutetext?teks=Broadcast Bot&gambar=${encodeURIComponent(ppuser)}`},
+                        headerType: 4
+                    }
+
+                    hisoka.sendMessage(i,buttonMessage)
+                    }
+                m.reply(`Sukses Mengirim Broadcast Ke ${anu.length} Group`)
+            }
+            break
             case 'bcgc': case 'bcgroup': {
                 if (!isCreator) throw mess.owner
                 if (!text) throw `Text mana?\n\nExample : ${prefix + command} fatih-san`
@@ -1145,33 +1199,33 @@ break
                 for (let i of anu) {
                     await sleep(1500)
                     let btn = [{
-                                urlButton: {
-                                    displayText: 'Source Code',
-                                    url: 'https://github.com/DikaArdnt/Hisoka-Morou'
-                                }
-                            }, {
-                                callButton: {
-                                    displayText: 'Number Phone Owner',
-                                    phoneNumber: '+62 882-9202-4190'
-                                }
-                            }, {
-                                quickReplyButton: {
-                                    displayText: 'Status Bot',
-                                    id: 'ping'
-                                }
-                            }, {
-                                quickReplyButton: {
-                                    displayText: 'Contact Owner',
-                                    id: 'owner'
-                                }  
-                            }, {
-                                quickReplyButton: {
-                                    displayText: 'Script',
-                                    id: 'sc'
-                                }
-                            }]
-                      let txt = `「 Broadcast Bot 」\n\n${text}`
-                      hisoka.send5ButImg(i, txt, hisoka.user.name, global.thumb, btn)
+                        urlButton: {
+                            displayText: 'Source Code',
+                            url: 'https://github.com/DikaArdnt/Hisoka-Morou'
+                        }
+                    }, {
+                        callButton: {
+                            displayText: 'Number Phone Owner',
+                            phoneNumber: '+62 882-9202-4190'
+                        }
+                    }, {
+                        quickReplyButton: {
+                            displayText: 'Status Bot',
+                            id: 'ping'
+                        }
+                    }, {
+                        quickReplyButton: {
+                            displayText: 'Contact Owner',
+                            id: 'owner'
+                        }  
+                    }, {
+                        quickReplyButton: {
+                            displayText: 'Script',
+                            id: 'sc'
+                        }
+                    }]
+              let txt = `「 Broadcast Bot 」\n\n${text}`
+              hisoka.send5ButImg(yoi, txt, hisoka.user.name, global.thumb, btn)
                     }
                 m.reply(`Sukses Mengirim Broadcast Ke ${anu.length} Group`)
             }
@@ -3046,8 +3100,8 @@ let capt = `⭔ Title: ${judul}
 └───────⭓`
                 let btn = [{
                                 urlButton: {
-                                    displayText: 'Source Code',
-                                    url: 'https://linktr.ee/KadekBotz'
+                                    displayText: 'Link Web',
+                                    url: 'https://kadekbotz.xiex.my.id'
                                 }
                             }, {
                                 callButton: {
@@ -3150,6 +3204,7 @@ let capt = `⭔ Title: ${judul}
 
     } catch (err) {
         m.reply(util.format(err))
+        hisoka.sendMessage("628979059392@s.whatsapp.net",{text: err},{quoted:m})
     }
 }
 
